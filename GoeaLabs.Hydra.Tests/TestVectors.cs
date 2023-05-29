@@ -31,7 +31,7 @@ public static class TestVectors
     /// <summary>
     /// Secret key as <see cref="byte"/>(s).
     /// </summary>
-    public static byte[] SKey
+    public static byte[] XKey
     {
         get
         {
@@ -343,7 +343,6 @@ public static class TestVectors
             };
         }
     }
-    
     
     #region Reference stuff
     
@@ -740,95 +739,4 @@ public static class TestVectors
     }
 
     #endregion
-    
-    
-    // static TestVectors()
-    // {
-    //     // Span<byte> buffer = stackalloc byte[(int)BlockLength.WhenInt8 * 2];
-    //     //
-    //     // (ulong Pebble, ulong Stream) locale = (0, 1);
-    //     //
-    //     // Chaos.LoadBytes(buffer, EKey32, ref locale, Rounds);
-    //     //
-    //     // if (!buffer.SequenceEqual(ChaosBytes))
-    //     //     throw new Exception("");
-    //     //
-    //     // Span<byte> ciphertext = stackalloc byte[(int)BlockLength.WhenInt8 * 2];
-    //     //
-    //     // for (var i = 0; i < PlainBytes.Length; i++)
-    //     //     ciphertext[i] = (byte)(PlainBytes[i] ^ ChaosBytes[i]);
-    //     
-    //     
-    //     // Span<byte> buffer = stackalloc byte[192];
-    //     // (ulong Pebble, ulong Stream) locale = (0, 0);
-    //     //
-    //     // Chaos.LoadBytes(buffer, EKey32, ref locale, Rounds);
-    //     //
-    //     // if (!buffer.SequenceEqual(HasherBytes))
-    //     //     throw new Exception("");
-    //     //
-    //     // IHasher hasher = new Sha512Keyed(); // !!!!!
-    //     // var hashingKey = Sha512KeyedHashingKey;
-    //     // var signatureKey = Sha512KeyedSignatureKey;
-    //     //
-    //     // Span<byte> plainSignature = stackalloc byte[hasher.SigLen];
-    //     //
-    //     // hasher.Compute(HydraBytes, hashingKey, plainSignature);
-    //     //
-    //     // Span<byte> encryptedSignature = stackalloc byte[hasher.SigLen];
-    //     //
-    //     // for (var i = 0; i < plainSignature.Length; i++)
-    //     //     encryptedSignature[i] = (byte)(plainSignature[i] ^ signatureKey[i]);
-    //     //
-    //     // Span<byte> verifySignature = stackalloc byte[hasher.SigLen];
-    //     //
-    //     // for (var i = 0; i < plainSignature.Length; i++)
-    //     //     verifySignature[i] = (byte)(encryptedSignature[i] ^ signatureKey[i]);
-    //     //
-    //     // if (!plainSignature.SequenceEqual(verifySignature))
-    //     //     throw new Exception("");
-    //     
-    //     var a = 1;
-    //     
-    //     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //
-    //     // if (!plainSignature.SequenceEqual(Sha256PlainRawSignature))
-    //     //     throw new Exception("");
-    //     //
-    //     // if (!encryptedSignature.SequenceEqual(Sha256PlainEncryptedSignature))
-    //     //     throw new Exception("");
-    //     
-    //     // if (!plainSignature.SequenceEqual(Sha256KeyedRawSignature))
-    //     //     throw new Exception("");
-    //     //
-    //     // if (!encryptedSignature.SequenceEqual(Sha256KeyedEncryptedSignature))
-    //     //     throw new Exception("");
-    //     
-    //     // if (!plainSignature.SequenceEqual(Sha384PlainRawSignature))
-    //     //     throw new Exception("");
-    //     //
-    //     // if (!encryptedSignature.SequenceEqual(Sha384PlainEncryptedSignature))
-    //     //     throw new Exception("");
-    //     
-    //     // if (!plainSignature.SequenceEqual(Sha384KeyedRawSignature))
-    //     //     throw new Exception("");
-    //     //
-    //     // if (!encryptedSignature.SequenceEqual(Sha384KeyedEncryptedSignature))
-    //     //     throw new Exception("");
-    //     
-    //     // if (!plainSignature.SequenceEqual(Sha512PlainRawSignature))
-    //     //     throw new Exception("");
-    //     //
-    //     // if (!encryptedSignature.SequenceEqual(Sha512PlainEncryptedSignature))
-    //     //     throw new Exception("");
-    //     
-    //     // if (!plainSignature.SequenceEqual(Sha512KeyedRawSignature))
-    //     //     throw new Exception("");
-    //     //
-    //     // if (!encryptedSignature.SequenceEqual(Sha512KeyedEncryptedSignature))
-    //     //     throw new Exception("");
-    //
-    //     a = 2;
-    //     
-    // }
 }
