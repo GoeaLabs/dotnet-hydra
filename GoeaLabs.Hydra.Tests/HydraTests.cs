@@ -48,22 +48,22 @@ public class HydraTests
     
 
     private static readonly Hydra HydraSha256Plain = 
-        new (TestVectors.SKey, TestVectors.Rounds, Sha256PlainHasher);
+        new (TestVectors.XKey, TestVectors.Rounds, Sha256PlainHasher);
     
     private static readonly Hydra HydraSha256Keyed = 
-        new (TestVectors.SKey, TestVectors.Rounds, Sha256KeyedHasher);
+        new (TestVectors.XKey, TestVectors.Rounds, Sha256KeyedHasher);
     
     private static readonly Hydra HydraSha384Plain = 
-        new (TestVectors.SKey, TestVectors.Rounds, Sha384PlainHasher);
+        new (TestVectors.XKey, TestVectors.Rounds, Sha384PlainHasher);
     
     private static readonly Hydra HydraSha384Keyed = 
-        new (TestVectors.SKey, TestVectors.Rounds, Sha384KeyedHasher);
+        new (TestVectors.XKey, TestVectors.Rounds, Sha384KeyedHasher);
     
     private static readonly Hydra HydraSha512Plain = 
-        new (TestVectors.SKey, TestVectors.Rounds, Sha512PlainHasher);
+        new (TestVectors.XKey, TestVectors.Rounds, Sha512PlainHasher);
     
     private static readonly Hydra HydraSha512Keyed = 
-        new (TestVectors.SKey, TestVectors.Rounds, Sha512KeyedHasher);
+        new (TestVectors.XKey, TestVectors.Rounds, Sha512KeyedHasher);
     
     
     [TestMethod]
@@ -78,7 +78,7 @@ public class HydraTests
     [DataRow((uint)21)]
     [ExpectedException(typeof(ArgumentException))]
     public void Constructor_throws_ArgumentException_if_incorrect_number_of_rounds(uint rounds) =>
-        _ = new Hydra(TestVectors.SKey, rounds, Sha256PlainHasher);
+        _ = new Hydra(TestVectors.XKey, rounds, Sha256PlainHasher);
 
     [TestMethod]
     [ExpectedException(typeof(ArgumentException))]
@@ -336,13 +336,4 @@ public class HydraTests
             tamperedCiphertext, 
             new byte[HydraSha256Plain.PlaintextLen(tamperedCiphertext)]);
     }
-    
-    
-    [TestMethod]
-    [Ignore]
-    public void Vectos()
-    {
-        var a = TestVectors.SKey;
-    }
-
 }

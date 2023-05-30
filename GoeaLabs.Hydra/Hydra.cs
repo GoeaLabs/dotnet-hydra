@@ -54,29 +54,29 @@ public class Hydra
     /// <summary>
     /// Secret key.
     /// </summary>
-    public byte[] Secret { get; }
+    public byte[] XKey { get; }
     
     /// <summary>
     /// Instantiates a new instance of Hydra.
     /// </summary>
-    /// <param name="secret">Secret key.</param>
+    /// <param name="xKey">Secret key.</param>
     /// <param name="rounds">Number of rounds.</param>
     /// <param name="hasher">Hashing engine.</param>
     /// <exception cref="ArgumentException">
-    /// If <paramref name="secret"/> length is not equal to <see cref="KeyLen"/>.
+    /// If <paramref name="xKey"/> length is not equal to <see cref="KeyLen"/>.
     /// </exception>
     /// <exception cref="ArgumentException">
     /// If <paramref name="rounds"/> is not greater than or equal to 20 and even.
     /// </exception>
-    public Hydra(byte[] secret, uint rounds, IHasher hasher)
+    public Hydra(byte[] xKey, uint rounds, IHasher hasher)
     {
-        Guard.HasSizeEqualTo(secret, KeyLen);
+        Guard.HasSizeEqualTo(xKey, KeyLen);
         
         if (rounds < 20 || rounds % 2 > 0)
             ThrowHelper.ThrowArgumentException(nameof(rounds), 
                 "Must be greater than or equal to 20 and even.");
         
-        Secret = secret;
+        XKey = xKey;
         Rounds = rounds;
         Hasher = hasher;
     }
@@ -85,10 +85,10 @@ public class Hydra
     /// XORs each byte from <see cref="source"/> buffer and
     /// writes the results to <see cref="output"/> buffer.
     /// </summary>
-    /// <param name="kernel">Chaos seed.</param>
+    /// <param name="eKey">Chaos seed.</param>
     /// <param name="source">Source buffer.</param>
     /// <param name="output">Output buffer.</param>
-    private void Xor(Span<uint> kernel, ReadOnlySpan<byte> source, Span<byte> output)
+    private void Xor(Span<uint> eKey, ReadOnlySpan<byte> source, Span<byte> output)
     {
         Span<byte> buffer = stackalloc byte[(int)BlockLength.WhenInt8];
         
@@ -99,7 +99,7 @@ public class Hydra
 
         do
         {
-            Chaos.LoadBytes(buffer, kernel, ref locale, Rounds);
+            Chaos.LoadBytes(buffer, eKey, ref locale, Rounds);
             
             foreach (var member in buffer)
             {
@@ -148,7 +148,7 @@ public class Hydra
     /// <summary>
     /// Encrypts a buffer using the given nonce.
     /// </summary>
-    /// <param name="nonce">Random nonce.</param>
+    /// <param name="nKey">Random nonce.</param>
     /// <param name="plaintext">Plaintext buffer.</param>
     /// <param name="encrypted">Encrypted buffer.</param>
     /// <exception cref="ArgumentException">
@@ -158,7 +158,10 @@ public class Hydra
     /// If <paramref name="encrypted"/> buffer length is not large enough to accomodate the
     /// encrypted data.
     /// </exception>
-    internal void Encrypt(Span<byte> nonce, ReadOnlySpan<byte> plaintext, Span<byte> encrypted)
+    /// <remarks>
+    /// This method only exists for testing purposes.
+    /// </remarks>
+    internal void Encrypt(Span<byte> nKey, ReadOnlySpan<byte> plaintext, Span<byte> encrypted)
     {
         Guard.HasSizeEqualTo(encrypted, EncryptedLen(plaintext));
         
@@ -167,32 +170,32 @@ public class Hydra
         var ciphertextSlice = encrypted[(KeyLen + Hasher.SigLen)..];
         
         // Copy nonce key to output
-        nonce.CopyTo(nonceSlice);
+        nKey.CopyTo(nonceSlice);
 
         // Compute actual encryption key bytes
-        nonce.Xor(Secret);
+        nKey.Xor(XKey);
 
         // Compute uint encryption key (Chaos kernel)
-        Span<uint> encryptionKey = stackalloc uint[Chaos.KernelLen];
-        nonce.Merge(encryptionKey);
+        Span<uint> eKey = stackalloc uint[Chaos.KernelLen];
+        nKey.Merge(eKey);
         
         // Encrypt plaintext
-        Xor(encryptionKey, plaintext, ciphertextSlice);
+        Xor(eKey, plaintext, ciphertextSlice);
         
         // Produce all the bytes necessary for hashing key (optional) and signature encryption key 
         Span<byte> hashingKeys = stackalloc byte[Hasher.KeyLen + Hasher.SigLen];
-        Chaos.LoadBytes(hashingKeys, encryptionKey, new Locale(0, 0), Rounds);
+        Chaos.LoadBytes(hashingKeys, eKey, new Locale(0, 0), Rounds);
         
         // Assign hashing key bytes
-        var hashingKey = Hasher.KeyLen > 0 ? hashingKeys[..Hasher.KeyLen] : Span<byte>.Empty;
+        var hKey = Hasher.KeyLen > 0 ? hashingKeys[..Hasher.KeyLen] : Span<byte>.Empty;
         // Assign signature encryption key bytes
-        var signatureKey = Hasher.KeyLen > 0 ? hashingKeys[Hasher.KeyLen..] : hashingKeys;
+        var sKey = Hasher.KeyLen > 0 ? hashingKeys[Hasher.KeyLen..] : hashingKeys;
         
         // Compute signature and write it to output
-        Hasher.Compute(ciphertextSlice, hashingKey, signatureSlice);
+        Hasher.Compute(ciphertextSlice, hKey, signatureSlice);
         
         // Encrypt signature
-        signatureSlice.Xor(signatureKey);
+        signatureSlice.Xor(sKey);
     }
 
     /// <summary>
@@ -210,10 +213,10 @@ public class Hydra
     /// </exception>
     public void Encrypt(ReadOnlySpan<byte> plaintext, Span<byte> encrypted)
     {
-        Span<byte> nonce = stackalloc byte[KeyLen];
-        nonce.FillRandom();
+        Span<byte> nKey = stackalloc byte[KeyLen];
+        nKey.FillRandom();
         
-        Encrypt(nonce, plaintext, encrypted);
+        Encrypt(nKey, plaintext, encrypted);
     }
     
     /// <summary>
@@ -271,13 +274,13 @@ public class Hydra
         var ciphertextSlice = encrypted[(KeyLen + Hasher.SigLen)..];
         
         // Extract nonce bytes from ciphertext
-        Span<byte> nonce = stackalloc byte[KeyLen];
+        Span<byte> nKey = stackalloc byte[KeyLen];
+        nonceSlice.CopyTo(nKey);
         
         // Compute uint encryption key from nonce bytes and secret key
-        nonceSlice.CopyTo(nonce);
-        nonce.Xor(Secret);
-        Span<uint> encryptionKey = stackalloc uint[Chaos.KernelLen];
-        nonce.Merge(encryptionKey);
+        nKey.Xor(XKey);
+        Span<uint> eKey = stackalloc uint[Chaos.KernelLen];
+        nKey.Merge(eKey);
         
         // Extract encrypted signature bytes
         Span<byte> signature = stackalloc byte[Hasher.SigLen];
@@ -285,7 +288,7 @@ public class Hydra
         
         // Produce all the bytes necessary for optional hashing key and signature encryption key 
         Span<byte> hashingKeys = stackalloc byte[Hasher.KeyLen + Hasher.SigLen];
-        Chaos.LoadBytes(hashingKeys, encryptionKey, new Locale(0, 0), Rounds);
+        Chaos.LoadBytes(hashingKeys, eKey, new Locale(0, 0), Rounds);
 
         // Decrypt signature
         signature.Xor(Hasher.KeyLen > 0 ? hashingKeys[Hasher.KeyLen..] : hashingKeys);
@@ -302,7 +305,7 @@ public class Hydra
             throw new CryptographicException("Failed signature verification.");
         
         // Decrypt ciphertext
-        Xor(encryptionKey, ciphertextSlice, plaintext);
+        Xor(eKey, ciphertextSlice, plaintext);
     }
 
     /// <summary>
